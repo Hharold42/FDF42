@@ -6,62 +6,100 @@
 /*   By: hharold <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/03 21:23:48 by hharold           #+#    #+#             */
-/*   Updated: 2021/11/03 21:23:49 by hharold          ###   ########.fr       */
+/*   Updated: 2021/12/05 17:53:11 by hharold          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-static size_t	word_len(char const *s, char c)
+int	ft_countword(char const *s)
 {
-	size_t	i;
+	int	count;
+
+	count = 0;
+	while (*s)
+	{
+		if (*s != ' ' && *s != '\t')
+		{
+			count++;
+			while ((*s != ' ' && *s != '\t') && *s != '\0')
+				s++;
+		}
+		else
+			s++;
+	}
+	return (count);
+}
+
+int	ft_wordmalloc(char const *s, char **mass)
+{
+	int	lenword;
+	int	i;
 
 	i = 0;
-	while (s[i] && s[i] != c)
-		i++;
-	return (i);
-}
-
-static char	*next_word(char const *s, char c)
-{
-	while (*s && *s == c)
-		s++;
-	return ((char *)s);
-}
-
-static void	cleanup(char **split, size_t cur)
-{
-	while (cur > 0)
+	while (*s)
 	{
-		cur--;
-		ft_strdel(&split[cur]);
-	}
-	ft_strdel(split);
-}
-
-char	**ft_strsplit(char const *s, char c)
-{
-	char	**split;
-	size_t	cur;
-	size_t	wordcount;
-
-	wordcount = ft_countwords((char *)s, c);
-	split = (char **)ft_memalloc((wordcount + 1) * sizeof(char *));
-	if (split == NULL)
-		return (NULL);
-	cur = 0;
-	while (cur < wordcount)
-	{
-		s = next_word(s, c);
-		split[cur] = ft_strsub(s, 0, word_len(s, c));
-		if (split[cur] == NULL)
+		lenword = 0;
+		if (*s != ' ' && *s != '\t')
 		{
-			cleanup(split, cur);
-			return (NULL);
+			while ((*s != ' ' && *s != '\t') && *s != '\0')
+			{
+				s++;
+				lenword++;
+			}
+			mass[i] = ((char *)malloc(sizeof(char) * (lenword + 1)));
+			if (!mass[i++])
+				return (i);
 		}
-		cur++;
-		s += word_len(s, c);
+		else
+			s++;
 	}
-	split[wordcount] = NULL;
-	return (split);
+	return (0);
+}
+
+void	ft_rewriting(char const *s, char **mass)
+{
+	int	i;
+	int	j;
+
+	i = 0;
+	j = 0;
+	while (*s)
+	{
+		if (*s != ' ' && *s != '\t')
+		{
+			while ((*s != ' ' && *s != '\t') && *s != '\0')
+				mass[i][j++] = *s++;
+			mass[i++][j] = '\0';
+		}
+		j = 0;
+		if (*s != '\0')
+			s++;
+	}
+}
+
+char	**ft_strsplit(char const *s, int word)
+{
+	char	**mass;
+	int		res;
+
+	if (!s)
+		return (NULL);
+	mass = (char **)malloc(sizeof(char *) * (word + 1));
+	if (!mass)
+		exit(1);
+	mass[word] = NULL;
+	res = ft_wordmalloc(s, mass);
+	if (res == 0)
+		ft_rewriting(s, mass);
+	else
+	{
+		while (res != 0)
+		{
+			free(mass[res]);
+			mass[res--] = NULL;
+		}
+		free(mass);
+	}
+	return ((char **)mass);
 }
